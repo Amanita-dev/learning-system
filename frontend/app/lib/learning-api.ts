@@ -144,6 +144,31 @@ export async function getCourseModules(courseId: number) {
   }
 }
 
+export async function generateModuleContent(moduleId: number) {
+  try {
+    console.log("📝 Генерируем контент для модуля:", moduleId);
+
+    const response = await fetch(
+      `${API_BASE_URL}/modules/${moduleId}/generate-content`,
+      { method: "POST" }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Ошибка генерации контента:", errorText);
+      throw new Error(`Ошибка при генерации контента: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log("✅ Контент сгенерирован:", data);
+
+    return data;
+  } catch (error) {
+    console.error("❌ Ошибка в generateModuleContent:", error);
+    return { success: false, message: "Ошибка при генерации контента" };
+  }
+}
+
 export async function getModuleContent(moduleId: number) {
   try {
     console.log("📄 Запрашиваю контент модуля:", moduleId);

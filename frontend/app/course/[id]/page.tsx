@@ -9,6 +9,7 @@ import {
   getCourseModules,
   getProgress,
   completeModule,
+  generateModuleContent,
   type Course,
   type Module,
   type Progress,
@@ -39,6 +40,7 @@ export default function CoursePage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
   const [error, setError] = useState("");
   const [showQuiz, setShowQuiz] = useState(false);
 
@@ -66,6 +68,45 @@ export default function CoursePage() {
   useEffect(() => {
     loadCourseData();
   }, [courseId]);
+
+  // Обработка выбора модуля - генерируем контент если нужно
+  const handleSelectModule = async (module: Module) => {
+    // Проверяем, закрыт ли модуль
+    if (module.is_locked) {
+      setError("Этот модуль закрыт. Пройдите предыдущий модуль.");
+      return;
+    }
+
+    // Проверяем, есть ли уже контент
+    if (!module.content || !module.content.trim()) {
+      setIsGeneratingContent(true);
+      setError("");
+      
+      try {
+        const result = await generateModuleContent(module.id);
+        if (result.success) {
+          // Обновляем данные модуля после генерации
+          await loadCourseData();
+          // Находим обновлённый модуль
+          const updatedModule = result.module;
+          setSelectedModule({
+            ...module,
+            content: updatedModule.content,
+            quiz: updatedModule.quiz,
+            quality: updatedModule.quality,
+          });
+        } else {
+          setError(result.message || "Ошибка генерации контента");
+        }
+      } catch (err) {
+        setError("Произошла ошибка при генерации контента");
+      } finally {
+        setIsGeneratingContent(false);
+      }
+    } else {
+      setSelectedModule(module);
+    }
+  };
 
   const handleModuleCompleted = async () => {
     if (selectedModule?.quiz?.questions?.length) {
@@ -110,14 +151,14 @@ export default function CoursePage() {
           <ModulesList
             modules={modules}
             selectedModule={selectedModule}
-            onSelectModule={setSelectedModule}
+            onSelectModule={handleSelectModule}
             isLoading={isLoading}
           />
 
           <ModuleContent
             selectedModule={selectedModule}
             courseId={courseId}
-            isLoading={isLoading}
+            isLoading={isLoading || isGeneratingContent}
             onModuleCompleted={handleModuleCompleted}
           />
         </div>
