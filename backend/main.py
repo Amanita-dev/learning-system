@@ -151,11 +151,11 @@ async def start_course(request: StartCourseRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail="Система агентов не подключена")
 
     try:
-        print(f"🚀 Начинаю генерацию курса через Ollama: {request.topic}")
+        print(f"🚀 Начинаю генерацию плана курса через Ollama: {request.topic}")
         orchestrator = AgentsOrchestrator()
 
-        # Получаем полный курс (с модулями, викторинами, оценками)
-        full_course = orchestrator.create_full_course(
+        # Получаем ТОЛЬКО план курса (без контента модулей)
+        course_plan = orchestrator.plan_course_only(
             topic=request.topic,
             difficulty=request.difficulty,
             num_modules=request.num_modules,
@@ -163,64 +163,41 @@ async def start_course(request: StartCourseRequest, db: Session = Depends(get_db
 
         # Сохраняем курс
         db_course = Course(
-            title=full_course.get("title", f"Курс: {request.topic}"),
-            description=full_course.get("description", ""),
+            title=course_plan.get("title", f"Курс: {request.topic}"),
+            description=course_plan.get("description", ""),
             topic=request.topic,
             difficulty=request.difficulty,
-            modules_count=int(full_course.get("total_modules", 0)),
+            modules_count=int(course_plan.get("total_modules", 0)),
         )
         db.add(db_course)
         db.commit()
         db.refresh(db_course)
 
-        # ✅ Правильные импорты
-        from agents.content import ContentGeneratorAgent
-        from agents.quiz import QuizGeneratorAgent
-        from agents.quality import QualityAssessorAgent
-
-        content_gen = ContentGeneratorAgent()
-        quiz_agent = QuizGeneratorAgent()
-        quality_agent = QualityAssessorAgent()
-
-        modules = full_course.get("modules", [])
+        # Создаём модули БЕЗ контента (только план)
+        modules = course_plan.get("modules", [])
         for m in modules:
-            # Безопасное извлечение order
             order_raw = m.get("order", 0)
             if isinstance(order_raw, list):
                 order = 0
-                print(f"⚠️ Порядок модуля — список: {order_raw}, использую 0")
             elif isinstance(order_raw, (str, int)):
                 try:
                     order = int(order_raw)
                 except (ValueError, TypeError):
                     order = 0
-                    print(f"⚠️ Не удалось преобразовать order: {order_raw}, использую 0")
             else:
                 order = 0
 
-            # Генерируем контент, викторину, оценку
-            content = content_gen.generate_module_content(
-                m.get("title", f"Модуль {order}"),
-                request.topic,
-                request.difficulty,
-                m.get("key_topics", [])
-            )
-
-            quiz = quiz_agent.generate_quiz(m.get("title", f"Модуль {order}"), m.get("key_topics", []))
-
-            quality = quality_agent.assess_content(content, m.get("title", f"Модуль {order}"))
-
-            # Сохраняем модуль с quiz и quality
+            # Сохраняем модуль БЕЗ контента, викторины и оценки
             db_module = Module(
                 course_id=db_course.id,
                 title=str(m.get("title", f"Модуль {order}")),
                 description=normalize_description_from_module(m),
-                content=content,
+                content="",  # ✅ Пустой контент - будет сгенерирован при открытии
                 module_order=order,
-                is_locked=(order > 1),
+                is_locked=(order > 1),  # ✅ Первый модуль открыт, остальные закрыты
                 is_completed=False,
-                quiz_data=json.dumps(quiz),  # ✅ Сохраняем quiz
-                quality_data=json.dumps(quality),  # ✅ Сохраняем quality
+                quiz_data="{}",  # ✅ Пустая викторина
+                quality_data="{}",  # ✅ Пустая оценка
             )
             db.add(db_module)
 
@@ -246,7 +223,7 @@ async def start_course(request: StartCourseRequest, db: Session = Depends(get_db
                 "topic": db_course.topic,
                 "modules_count": db_course.modules_count,
             },
-            "message": "✅ Курс успешно создан через Ollama!",
+            "message": "✅ План курса создан! Контент модулей будет сгенерирован по мере прохождения.",
         }
 
     except Exception as e:
@@ -270,12 +247,76 @@ async def get_course_modules(course_id: int, db: Session = Depends(get_db)):
                 "module_order": m.module_order,
                 "is_locked": m.is_locked,
                 "is_completed": m.is_completed,
-                "quiz": json.loads(m.quiz_data),  # ✅ Возвращаем quiz
-                "quality": json.loads(m.quality_data),  # ✅ Возвращаем quality
+                "quiz": json.loads(m.quiz_data) if m.quiz_data and m.quiz_data != "{}" else None,
+                "quality": json.loads(m.quality_data) if m.quality_data and m.quality_data != "{}" else None,
             }
             for m in modules
         ],
     }
+
+@app.post("/api/learning/modules/{module_id}/generate-content")
+async def generate_module_content(module_id: int, db: Session = Depends(get_db)):
+    """Генерация контента для модуля по требованию (когда пользователь открывает модуль)"""
+    if AgentsOrchestrator is None:
+        raise HTTPException(status_code=500, detail="Система агентов не подключена")
+    
+    module = db.query(Module).filter(Module.id == module_id).first()
+    if not module:
+        raise HTTPException(status_code=404, detail="Модуль не найден")
+    
+    # Проверяем, был ли уже сгенерирован контент
+    if module.content and module.content.strip():
+        return {
+            "success": True,
+            "message": "Контент уже сгенерирован",
+            "module": {
+                "id": module.id,
+                "content": module.content,
+                "quiz": json.loads(module.quiz_data) if module.quiz_data and module.quiz_data != "{}" else None,
+                "quality": json.loads(module.quality_data) if module.quality_data and module.quality_data != "{}" else None,
+            }
+        }
+    
+    # Получаем информацию о курсе для генерации
+    course = db.query(Course).filter(Course.id == module.course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Курс не найден")
+    
+    try:
+        print(f"📝 Генерируем контент для модуля {module_id}: {module.title}")
+        orchestrator = AgentsOrchestrator()
+        
+        # Извлекаем ключевые темы из описания модуля
+        key_topics = module.description.split("; ") if module.description else []
+        
+        # Генерируем контент, викторину и оценку
+        generated = orchestrator.generate_module_content_on_demand(
+            module_title=module.title,
+            topic=course.topic,
+            difficulty=course.difficulty,
+            key_topics=key_topics
+        )
+        
+        # Сохраняем сгенерированный контент
+        module.content = generated["content"]
+        module.quiz_data = json.dumps(generated["quiz"])
+        module.quality_data = json.dumps(generated["quality"])
+        db.commit()
+        db.refresh(module)
+        
+        return {
+            "success": True,
+            "message": "✅ Контент успешно сгенерирован",
+            "module": {
+                "id": module.id,
+                "content": module.content,
+                "quiz": json.loads(module.quiz_data),
+                "quality": json.loads(module.quality_data),
+            }
+        }
+    except Exception as e:
+        print(f"❌ Ошибка генерации контента: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка генерации: {str(e)}")
 
 @app.get("/api/learning/modules/{module_id}/content")
 async def get_module_content(module_id: int, db: Session = Depends(get_db)):
