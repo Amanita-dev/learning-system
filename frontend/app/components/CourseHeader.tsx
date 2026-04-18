@@ -8,53 +8,51 @@ interface CourseHeaderProps {
 
 export default function CourseHeader({ course, progress }: CourseHeaderProps) {
   return (
-    <div className="rounded-3xl p-8 md:p-12 bg-gradient-to-br from-red-900/30 to-orange-700/30 backdrop-blur-lg border border-red-500/30 animate-fadeIn shadow-[0_0_25px_rgba(239,68,68,0.2)]">
-      <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 bg-gradient-to-r from-red-200 to-orange-200 bg-clip-text text-transparent">
-        🎓 {course?.title || "Загрузка..."}
+    <section className="material-surface animate-fadeIn rounded-[28px] p-6 md:p-8">
+      <h1 className="text-3xl font-bold tracking-tight text-[color:var(--foreground)] md:text-4xl">
+        {course?.title || "Загрузка..."}
       </h1>
 
       {progress && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <span className="text-white font-semibold text-lg">
+        <div className="mt-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-[color:var(--secondary)]">
               Прогресс: {progress.completed_modules_count} / {progress.total_modules_count}
             </span>
-            <span className="text-2xl font-bold text-orange-300">
+            <span className="text-lg font-semibold text-[color:var(--primary)]">
               {progress.progress_percent}%
             </span>
           </div>
 
-          {/* Прогресс бар */}
-          <div className="h-4 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm border border-red-500/20">
+          <div className="h-3 overflow-hidden rounded-full bg-[color:var(--surface-variant)]">
             <div 
-              className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+              className="h-full rounded-full bg-[color:var(--primary)] transition-all duration-700"
               style={{ width: `${progress.progress_percent}%` }}
             />
           </div>
 
-          {/* Статистика */}
-          <div className="grid grid-cols-3 gap-4 mt-8">
-            <div className="rounded-xl p-4 text-center bg-black/20 backdrop-blur-lg border border-red-500/20 animate-pulse">
-              <div className="text-3xl font-bold text-green-300">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-[color:var(--surface-variant)] p-4 text-center">
+              <div className="text-2xl font-semibold text-[color:var(--foreground)]">
                 {progress.completed_modules_count}
               </div>
-              <div className="text-sm text-white mt-1">Завершено</div>
+              <div className="text-sm text-[color:var(--secondary)]">Завершено</div>
             </div>
-            <div className="rounded-xl p-4 text-center bg-black/20 backdrop-blur-lg border border-red-500/20 animate-pulse">
-              <div className="text-3xl font-bold text-orange-300">
+            <div className="rounded-2xl bg-[color:var(--surface-variant)] p-4 text-center">
+              <div className="text-2xl font-semibold text-[color:var(--foreground)]">
                 {progress.total_modules_count - progress.completed_modules_count}
               </div>
-              <div className="text-sm text-white mt-1">Осталось</div>
+              <div className="text-sm text-[color:var(--secondary)]">Осталось</div>
             </div>
-            <div className="rounded-xl p-4 text-center bg-black/20 backdrop-blur-lg border border-red-500/20 animate-pulse">
-              <div className="text-3xl font-bold text-yellow-300">
+            <div className="rounded-2xl bg-[color:var(--surface-variant)] p-4 text-center">
+              <div className="text-2xl font-semibold text-[color:var(--foreground)]">
                 {progress.progress_percent}%
               </div>
-              <div className="text-sm text-white mt-1">Всего</div>
+              <div className="text-sm text-[color:var(--secondary)]">Всего</div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

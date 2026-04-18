@@ -2,7 +2,7 @@ import json
 from .base import BaseAgent
 
 class QuizGeneratorAgent(BaseAgent):
-    def generate_quiz(self, module_title: str, key_topics: list) -> dict:
+    def generate_quiz(self, module_title: str, key_topics: list, content: str) -> dict:
         print(f"❓ [Quiz] Генерирую тест для: {module_title}")
         # truncated_content = (content[:3000] + "...") if len(content) > 3000 else content
         # 1. Формируем строку тем
@@ -21,6 +21,7 @@ class QuizGeneratorAgent(BaseAgent):
 4. "correct_index" — это число от 0 до 3.
 
 ПРИМЕР ВЗАИМОДЕЙСТВИЯ:
+
 
 Ввод:
 Тема: "Фотосинтез"
@@ -51,6 +52,8 @@ class QuizGeneratorAgent(BaseAgent):
 Ввод:
 Тема: "{module_title}"
 Темы: "{topics_str}"
+Контент:
+{content[:2000]}
 
 
 Вывод:

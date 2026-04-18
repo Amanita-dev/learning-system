@@ -38,40 +38,35 @@ export default function QuizModal({
   if (!questions.length) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-red-900/30 to-orange-700/30 backdrop-blur-lg border border-red-500/30 rounded-3xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">🧠 Проверь свои знания</h2>
-          <button
-            onClick={onClose}
-            className="text-white text-opacity-70 hover:text-opacity-100 text-2xl"
-          >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="material-surface max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Проверь свои знания</h2>
+          <button onClick={onClose} className="text-2xl text-[color:var(--secondary)]">
             ✕
           </button>
         </div>
 
         {questions.map((q, idx) => (
-          <div key={idx} className="mb-6 p-4 bg-black/20 rounded-xl">
-            <p className="text-white font-semibold mb-3">{idx + 1}. {q.question}</p>
+          <div key={idx} className="mb-5 rounded-2xl bg-[color:var(--surface-variant)] p-4">
+            <p className="mb-3 font-medium text-[color:var(--foreground)]">
+              {idx + 1}. {q.question}
+            </p>
             <div className="space-y-2">
               {q.options.map((opt, optIdx) => (
                 <button
                   key={optIdx}
                   onClick={() => handleSelect(idx, optIdx)}
                   disabled={submitted}
-                  className={`
-                    w-full text-left p-3 rounded-lg transition-all
-                    ${
-                      answers[idx] === optIdx
-                        ? q.correct_index === optIdx
-                          ? "bg-green-500/30 border border-green-400"
-                          : "bg-red-500/30 border border-red-400"
-                        : submitted && q.correct_index === optIdx
-                        ? "bg-green-500/30 border border-green-400"
-                        : "bg-white/10 hover:bg-white/20"
-                    }
-                    text-white
-                  `}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                    answers[idx] === optIdx
+                      ? q.correct_index === optIdx
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                        : "border-red-200 bg-red-50 text-[color:var(--error)]"
+                      : submitted && q.correct_index === optIdx
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                      : "border-[color:var(--outline)] bg-[color:var(--surface)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-variant)]"
+                  }`}
                 >
                   {opt}
                 </button>
@@ -84,14 +79,14 @@ export default function QuizModal({
           <button
             onClick={handleSubmit}
             disabled={!allAnswered}
-            className="w-full py-3 bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--primary)] px-5 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Проверить ответы
           </button>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-green-300 text-xl font-bold">✅ Тест пройден!</p>
-            <p className="text-white mt-2">Переход к следующему модулю...</p>
+          <div className="py-4 text-center">
+            <p className="text-xl font-semibold text-emerald-700">✅ Тест пройден!</p>
+            <p className="mt-2 text-[color:var(--secondary)]">Переход к следующему модулю...</p>
           </div>
         )}
       </div>

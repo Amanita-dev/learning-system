@@ -19,6 +19,7 @@ export interface QuizQuestion {
 }
 
 // === 3. Module — с полем quiz и quality ===
+// === 3. Module — с полем quiz и quality ===
 export interface Module {
   id: number;
   title: string;
@@ -39,6 +40,8 @@ export interface Module {
     recommendation: string;
   };
 }
+
+
 
 // === 4. Progress ===
 export interface Progress {

@@ -48,24 +48,30 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-orange-800 to-red-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto animate-slideIn">
-        <div className="text-center mb-12 mt-12">
-          <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-red-300 to-orange-200 bg-clip-text text-transparent animate-pulse">
-            🎓 Обучение с AI
-          </h1>
-          <p className="text-xl text-white text-opacity-90">
-            Введи тему — система создаст персональный курс специально для тебя 🚀
-          </p>
-        </div>
+    <main className="min-h-screen w-full max-w-4xl mx-auto px-4 py-6 md:px-8 md:py-10">
+      <div className="mx-auto max-w-7xl animate-slideIn space-y-8">
+        <section className="material-surface overflow-hidden rounded-[28px] p-6 md:p-10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-3xl space-y-3">
+              <span className="inline-flex rounded-full bg-[color:var(--primary-container)] px-4 py-2 text-sm font-medium text-[color:var(--primary)]">
+                AI Learning Platform
+              </span>
+              <h1 className="text-4xl font-bold tracking-tight text-[color:var(--foreground)] md:text-5xl">
+                Обучение с AI
+              </h1>
+              <p className="max-w-2xl text-base text-[color:var(--secondary)] md:text-lg">
+                Введи тему — система создаст персональный курс специально для тебя.
+              </p>
+            </div>
+          </div>
+        </section>
 
         <StartCourseForm onSubmit={handleStartCourse} isLoading={isLoading} />
 
         {error && <AlertMessage type="error" message={error} />}
 
-        {/* ✅ Сетка курсов */}
         <CoursesGrid courses={courses} />
       </div>
-    </div>
+    </main>
   );
 }

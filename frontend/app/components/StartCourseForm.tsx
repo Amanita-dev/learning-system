@@ -24,31 +24,31 @@ export default function StartCourseForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl p-8 md:p-12 space-y-6 bg-gradient-to-br from-red-900/30 to-orange-700/30 backdrop-blur-lg border border-red-500/30 animate-fadeIn shadow-[0_0_25px_rgba(239,68,68,0.2)]"
+      className="material-surface space-y-6 rounded-[28px] p-6 md:p-8"
     >
-      <div className="space-y-3">
-        <label className="block text-lg font-semibold text-white">
-          📚 Что ты хочешь изучить?
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[color:var(--secondary)]">
+          Что ты хочешь изучить?
         </label>
         <input
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="Пример: Python, JavaScript, Машинное обучение..."
-          className="w-full text-white text-lg rounded-xl p-4 bg-black/20 backdrop-blur-lg border border-red-500/30 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all"
+          className="w-full rounded-2xl border border-[color:var(--outline)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none transition focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-container)]"
           disabled={isLoading}
           autoFocus
         />
       </div>
 
-      <div className="space-y-3">
-        <label className="block text-lg font-semibold text-white">
-          📊 Уровень сложности
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[color:var(--secondary)]">
+          Уровень сложности
         </label>
         <select
           value={difficulty}
           onChange={(e) => setDifficulty(e.target.value as "beginner" | "intermediate" | "advanced")}
-          className="w-full text-white text-lg rounded-xl p-4 bg-black/20 backdrop-blur-lg border border-red-500/30 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all"
+          className="w-full rounded-2xl border border-[color:var(--outline)] bg-[color:var(--surface)] px-4 py-3 text-[color:var(--foreground)] outline-none transition focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-container)]"
           disabled={isLoading}
         >
           <option value="beginner">Начинающий</option>
@@ -60,7 +60,7 @@ export default function StartCourseForm({
       <button
         type="submit"
         disabled={isLoading || !topic.trim()}
-        className="w-full text-lg py-4 font-bold rounded-xl bg-gradient-to-r from-red-600 to-orange-500 text-white hover:from-red-700 hover:to-orange-600 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_4px_15px_rgba(239,68,68,0.4)] hover:shadow-[0_6px_20px_rgba(239,68,68,0.5)]"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--primary)] px-5 py-3 text-base font-medium text-white shadow-[0_6px_18px_rgba(103,80,164,0.28)] transition hover:shadow-[0_10px_24px_rgba(103,80,164,0.34)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <>

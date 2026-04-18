@@ -8,7 +8,7 @@ class AgentsOrchestrator:
     def __init__(self):
         self.planner = CoursePlannerAgent()
         self.content_gen = ContentGeneratorAgent()
-        self.quality_assessor = QualityAssessorAgent()
+        # self.quality_assessor = QualityAssessorAgent()
         self.quiz_generator = QuizGeneratorAgent()
 
     def create_full_course(self, topic: str, difficulty: str, num_modules: int = 5) -> dict:
@@ -33,12 +33,12 @@ class AgentsOrchestrator:
             mod["content"] = content
 
             # 2. Генерация викторины
-            quiz = self.quiz_generator.generate_quiz(title, key_topics)
+            quiz = self.quiz_generator.generate_quiz(title, key_topics, content)
             mod["quiz"] = quiz
 
             # 3. Оценка качества
-            quality = self.quality_assessor.assess_content(content, title)
-            mod["quality"] = quality
+            # quality = self.quality_assessor.assess_content(content, title)
+            # mod["quality"] = quality
 
             final_modules.append(mod)
 

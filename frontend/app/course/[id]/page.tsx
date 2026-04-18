@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   getCourse,
@@ -13,15 +13,26 @@ import {
   type Module,
   type Progress,
 } from "../../lib/learning-api";
+
+const readSelectedModuleId = (value: string | null) => {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 import CourseHeader from "../../components/CourseHeader";
 import ModulesList from "../../components/ModulesList";
 import ModuleContent from "../../components/ModuleContent";
 import QuizModal from "../../components/QuizModal";
 import AlertMessage from "../../components/AlertMessage";
 
+
 export default function CoursePage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const id = params.id;
+
 
   // ✅ Добавим проверку, чтобы не было NaN
   if (typeof id === "string" && isNaN(Number(id))) {
@@ -33,7 +44,6 @@ export default function CoursePage() {
   }
 
   const courseId = Number(id);
-
   const [course, setCourse] = useState<Course | null>(null);  // ✅
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -67,6 +77,17 @@ export default function CoursePage() {
     loadCourseData();
   }, [courseId]);
 
+  useEffect(() => {
+    const selectedModuleId = readSelectedModuleId(searchParams.get("module"));
+    if (!selectedModuleId || !modules.length) return;
+
+    const module = modules.find((item) => item.id === selectedModuleId);
+    if (module) {
+      setSelectedModule(module);
+    }
+  }, [searchParams, modules]);
+
+
   const handleModuleCompleted = async () => {
     if (selectedModule?.quiz?.questions?.length) {
       setShowQuiz(true);
@@ -78,35 +99,41 @@ export default function CoursePage() {
   const finalizeModuleCompletion = async () => {
     const result = await completeModule(selectedModule!.id);
     if (result.success) {
-      await loadCourseData(); // ✅ Обновляем данные
+      await loadCourseData();
       setSelectedModule(null);
       setShowQuiz(false);
+      router.push(`/course/${courseId}/modules`);
     } else {
       setError(result.message);
     }
   };
+
 
   const handleQuizComplete = async () => {
     await finalizeModuleCompletion();
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-orange-800 to-red-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+    <main className="min-h-screen px-4 py-6 md:px-8 md:py-10 ">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="flex items-center justify-between gap-3">
           <Link href="/">
-            <button className="text-white bg-black/30 backdrop-blur-lg border border-red-500/30 rounded-xl px-6 py-3 font-bold hover:bg-white/10 transition-all">
+            <button className="inline-flex items-center gap-2 rounded-full bg-[color:var(--surface)] px-5 py-3 text-sm font-medium text-[color:var(--primary)] shadow-[0_4px_14px_rgba(0,0,0,0.08)] transition hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
               ← Назад к созданию курса
+            </button>
+          </Link>
+
+          <Link href={`/course/${courseId}/modules`}>
+            <button className="inline-flex items-center gap-2 rounded-full bg-[color:var(--primary)] px-5 py-3 text-sm font-medium text-white shadow-[0_6px_18px_rgba(103,80,164,0.28)] transition hover:shadow-[0_10px_24px_rgba(103,80,164,0.34)]">
+              Выбрать модуль
             </button>
           </Link>
         </div>
 
-        <CourseHeader
-          course={course}  // ✅ Передаём реальный курс
-          progress={progress}
-        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+        <CourseHeader course={course} progress={progress} />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <ModulesList
             modules={modules}
             selectedModule={selectedModule}
@@ -132,6 +159,6 @@ export default function CoursePage() {
           />
         )}
       </div>
-    </div>
+    </main>
   );
 }

@@ -206,7 +206,11 @@ async def start_course(request: StartCourseRequest, db: Session = Depends(get_db
                 m.get("key_topics", [])
             )
 
-            quiz = quiz_agent.generate_quiz(m.get("title", f"Модуль {order}"), m.get("key_topics", []))
+            quiz = quiz_agent.generate_quiz(
+                m.get("title", f"Модуль {order}"),
+                m.get("key_topics", []),
+                content
+            )
 
             quality = quality_agent.assess_content(content, m.get("title", f"Модуль {order}"))
 
